@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cupones — Separador</title>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Mono:wght@300;400&display=swap"
+    rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #0e0e0e;
+      --surface: #161616;
+      --border: #2a2a2a;
+      --accent: #c9f03a;
+      --accent-dim: #8aaa1a;
+      --text: #f0ede6;
+      --muted: #666;
+      --error: #ff5c5c;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Mono', monospace;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    /* background grid */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(201, 240, 58, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(201, 240, 58, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 560px;
+    }
+
+    .header {
+      margin-bottom: 48px;
+      animation: fadeUp 0.6s ease both;
+    }
+
+    .eyebrow {
+      font-size: 10px;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 12px;
+    }
+
+    h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: clamp(2.4rem, 6vw, 3.6rem);
+      line-height: 1.05;
+      color: var(--text);
+    }
+
+    h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .subtitle {
+      margin-top: 14px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.7;
+    }
+
+    /* Upload area */
+    .upload-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 40px 32px;
+      animation: fadeUp 0.6s 0.1s ease both;
+      transition: border-color 0.2s;
+    }
+
+    .upload-card.drag-over {
+      border-color: var(--accent);
+    }
+
+    .drop-zone {
+      border: 1px dashed var(--border);
+      border-radius: 2px;
+      padding: 48px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+
+    .drop-zone:hover,
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(201, 240, 58, 0.03);
+    }
+
+    .drop-zone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+
+    .drop-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 16px;
+      color: var(--accent);
+    }
+
+    .drop-label {
+      font-size: 13px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .drop-label strong {
+      color: var(--text);
+      font-weight: 400;
+    }
+
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: 12px;
+      margin-top: 20px;
+      padding: 14px 16px;
+      background: rgba(201, 240, 58, 0.06);
+      border: 1px solid rgba(201, 240, 58, 0.2);
+      border-radius: 2px;
+    }
+
+    .file-info.visible {
+      display: flex;
+    }
+
+    .file-icon {
+      color: var(--accent);
+      font-size: 18px;
+    }
+
+    .file-name {
+      font-size: 12px;
+      color: var(--text);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-size {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: 100%;
+      margin-top: 20px;
+      padding: 16px;
+      background: var(--accent);
+      color: #0e0e0e;
+      border: none;
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-weight: 400;
+    }
+
+    .btn:hover:not(:disabled) {
+      background: #d8ff3f;
+      transform: translateY(-1px);
+    }
+
+    .btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Progress */
+    .progress-wrap {
+      display: none;
+      margin-top: 24px;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+    }
+
+    .progress-bar-bg {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s ease;
+      animation: pulse-bar 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-bar {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.6;
+      }
+    }
+
+    .progress-label {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 10px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .status-log {
+      margin-top: 12px;
+      font-size: 11px;
+      color: var(--accent-dim);
+      min-height: 16px;
+    }
+
+    /* Results */
+    .results-card {
+      display: none;
+      margin-top: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .results-card.visible {
+      display: block;
+    }
+
+    .results-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .results-title {
+      font-size: 11px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .results-count {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .file-list {
+      max-height: 260px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: var(--border) transparent;
+    }
+
+    .file-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 20px;
+      border-bottom: 1px solid rgba(42, 42, 42, 0.5);
+      transition: background 0.15s;
+      animation: fadeUp 0.3s ease both;
+    }
+
+    .file-item:last-child {
+      border-bottom: none;
+    }
+
+    .file-item:hover {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    .item-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .item-name {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text);
+    }
+
+    .item-dl {
+      font-size: 11px;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 4px 10px;
+      border: 1px solid rgba(201, 240, 58, 0.3);
+      border-radius: 2px;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .item-dl:hover {
+      background: rgba(201, 240, 58, 0.1);
+      border-color: var(--accent);
+    }
+
+    .btn-download-all {
+      margin: 16px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 2px;
+      font-family: 'DM Mono', monospace;
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: all 0.2s;
+      width: calc(100% - 40px);
+    }
+
+    .btn-download-all:hover {
+      background: rgba(201, 240, 58, 0.08);
+    }
+
+    /* Error */
+    .error-msg {
+      display: none;
+      margin-top: 16px;
+      padding: 12px 16px;
+      background: rgba(255, 92, 92, 0.08);
+      border: 1px solid rgba(255, 92, 92, 0.3);
+      border-radius: 2px;
+      font-size: 12px;
+      color: var(--error);
+    }
+
+    .error-msg.visible {
+      display: block;
+    }
+
+    /* Reset link */
+    .reset-link {
+      display: none;
+      margin-top: 16px;
+      font-size: 11px;
+      color: var(--muted);
+      text-align: center;
+      cursor: pointer;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .reset-link.visible {
+      display: block;
+    }
+
+    .reset-link:hover {
+      color: var(--text);
+    }
+
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid rgba(0, 0, 0, 0.3);
+      border-top-color: #0e0e0e;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* footer */
+    .footer {
+      margin-top: 40px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: center;
+      animation: fadeUp 0.6s 0.2s ease both;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="wrapper">
+    <div class="header">
+      <p class="eyebrow">ARG Broker — Herramientas internas</p>
+      <h1>Separador de<br><em>cupones</em></h1>
+      <p class="subtitle">Subí el PDF con los 18 cupones.<br>El sistema los separa automáticamente por persona.</p>
+    </div>
+
+    <div class="upload-card" id="uploadCard">
+      <div class="drop-zone" id="dropZone">
+        <input type="file" id="fileInput" accept=".pdf" />
+        <svg class="drop-icon" viewBox="0 0 40 40" fill="none" stroke="currentColor" stroke-width="1.5">
+          <rect x="8" y="4" width="24" height="32" rx="2" />
+          <path d="M14 16h12M14 21h12M14 26h8" />
+          <path d="M26 4v8h8" stroke-width="1.2" />
+        </svg>
+        <p class="drop-label">
+          <strong>Arrastrá el PDF aquí</strong><br>
+          o hacé clic para seleccionarlo
+        </p>
+      </div>
+
+      <div class="file-info" id="fileInfo">
+        <span class="file-icon">◈</span>
+        <span class="file-name" id="fileName">—</span>
+        <span class="file-size" id="fileSize">—</span>
+      </div>
+
+      <button class="btn" id="submitBtn" disabled>
+        <span id="btnText">Seleccioná un PDF</span>
+      </button>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="progressFill"></div>
+        </div>
+        <div class="progress-label">
+          <span id="progressLabel">Enviando a n8n...</span>
+          <span id="progressPct">—</span>
+        </div>
+        <div class="status-log" id="statusLog">Iniciando...</div>
+      </div>
+
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="results-card" id="resultsCard">
+      <div class="results-header">
+        <span class="results-title">Cupones generados</span>
+        <span class="results-count" id="resultsCount">0 archivos</span>
+      </div>
+      <div class="file-list" id="fileList"></div>
+      <button class="btn-download-all" id="downloadAllBtn">
+        ↓ Descargar todos
+      </button>
+    </div>
+
+    <span class="reset-link" id="resetLink" onclick="resetApp()">← Procesar otro PDF</span>
+
+    <p class="footer">Ascia × ARG Broker</p>
+  </div>
+
+  <script>
+    // ⚠️ REEMPLAZÁ ESTA URL con el webhook de tu flujo en n8n
+    const N8N_WEBHOOK_URL = '/api/webhook';
+    let selectedFile = null;
+    let generatedFiles = [];
+
+    const fileInput = document.getElementById('fileInput');
+    const dropZone = document.getElementById('dropZone');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const fileSize = document.getElementById('fileSize');
+    const submitBtn = document.getElementById('submitBtn');
+    const btnText = document.getElementById('btnText');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressLabel = document.getElementById('progressLabel');
+    const progressPct = document.getElementById('progressPct');
+    const statusLog = document.getElementById('statusLog');
+    const errorMsg = document.getElementById('errorMsg');
+    const resultsCard = document.getElementById('resultsCard');
+    const fileList = document.getElementById('fileList');
+    const resultsCount = document.getElementById('resultsCount');
+    const downloadAllBtn = document.getElementById('downloadAllBtn');
+    const resetLink = document.getElementById('resetLink');
+    const uploadCard = document.getElementById('uploadCard');
+    const dropZoneEl = document.getElementById('dropZone');
+
+    // Drag & drop
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('drag-over');
+      const f = e.dataTransfer.files[0];
+      if (f && f.type === 'application/pdf') setFile(f);
+    });
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files[0]) setFile(fileInput.files[0]);
+    });
+
+    function setFile(f) {
+      selectedFile = f;
+      fileName.textContent = f.name;
+      fileSize.textContent = formatSize(f.size);
+      fileInfo.classList.add('visible');
+      submitBtn.disabled = false;
+      btnText.textContent = 'Procesar cupones';
+      hideError();
+    }
+
+    function formatSize(bytes) {
+      if (bytes < 1024) return bytes + ' B';
+      if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+      return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+    }
+
+    submitBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
+      await processFile();
+    });
+
+    async function processFile() {
+      submitBtn.disabled = true;
+      btnText.innerHTML = '<div class="spinner"></div> Procesando...';
+      progressWrap.classList.add('visible');
+      hideError();
+
+      // Simulated progress stages
+      const stages = [
+        [10, 'Enviando PDF a n8n...'],
+        [30, 'Leyendo páginas...'],
+        [55, 'Extrayendo nombres...'],
+        [75, 'Generando PDFs individuales...'],
+        [90, 'Subiendo a Google Drive...'],
+      ];
+
+      let stageIndex = 0;
+      const progressInterval = setInterval(() => {
+        if (stageIndex < stages.length) {
+          const [pct, label] = stages[stageIndex];
+          setProgress(pct, label);
+          stageIndex++;
+        }
+      }, 1200);
+
+      try {
+        const formData = new FormData();
+        formData.append('file', selectedFile);
+
+        const response = await fetch(N8N_WEBHOOK_URL, {
+          method: 'POST',
+          body: formData,
+        });
+
+        clearInterval(progressInterval);
+
+        if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+        const data = await response.json();
+        setProgress(100, 'Listo');
+        statusLog.textContent = '✓ Procesamiento completo';
+
+        setTimeout(() => showResults(data), 500);
+
+      } catch (err) {
+        clearInterval(progressInterval);
+        progressWrap.classList.remove('visible');
+        submitBtn.disabled = false;
+        btnText.textContent = 'Reintentar';
+        showError(err.message || 'Error al conectar con n8n. Verificá la URL del webhook.');
+      }
+    }
+
+    function setProgress(pct, label) {
+      progressFill.style.width = pct + '%';
+      progressPct.textContent = pct + '%';
+      if (label) statusLog.textContent = label;
+    }
+
+    function showResults(data) {
+      // data puede ser array de { nombre, url } o { files: [...] }
+      generatedFiles = Array.isArray(data) ? data : (data.files || []);
+
+      resultsCount.textContent = generatedFiles.length + ' archivos';
+      fileList.innerHTML = '';
+
+      generatedFiles.forEach((f, i) => {
+        const item = document.createElement('div');
+        item.className = 'file-item';
+        item.style.animationDelay = (i * 0.05) + 's';
+        item.innerHTML = `
+        <span class="item-dot"></span>
+        <span class="item-name">${f.nombre || f.name || 'cupon_' + (i + 1)}.pdf</span>
+        ${f.url ? `<a class="item-dl" href="${f.url}" target="_blank" download>↓</a>` : '<span class="item-dl" style="opacity:0.3;cursor:default">Drive</span>'}
+      `;
+        fileList.appendChild(item);
+      });
+
+      resultsCard.classList.add('visible');
+      resetLink.classList.add('visible');
+      uploadCard.style.opacity = '0.5';
+      uploadCard.style.pointerEvents = 'none';
+    }
+
+    downloadAllBtn.addEventListener('click', () => {
+      const downloadable = generatedFiles.filter(f => f.url);
+      if (downloadable.length === 0) {
+        alert('Los archivos están en Google Drive. Buscalos en la carpeta configurada.');
+        return;
+      }
+      downloadable.forEach((f, i) => {
+        setTimeout(() => {
+          const a = document.createElement('a');
+          a.href = f.url;
+          a.download = (f.nombre || f.name || 'cupon_' + (i + 1)) + '.pdf';
+          a.target = '_blank';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+        }, i * 300);
+      });
+    });
+
+    function showError(msg) {
+      errorMsg.textContent = '⚠ ' + msg;
+      errorMsg.classList.add('visible');
+    }
+
+    function hideError() {
+      errorMsg.classList.remove('visible');
+    }
+
+    function resetApp() {
+      selectedFile = null;
+      generatedFiles = [];
+      fileInput.value = '';
+      fileInfo.classList.remove('visible');
+      fileList.innerHTML = '';
+      resultsCard.classList.remove('visible');
+      resetLink.classList.remove('visible');
+      progressWrap.classList.remove('visible');
+      progressFill.style.width = '0%';
+      submitBtn.disabled = true;
+      btnText.textContent = 'Seleccioná un PDF';
+      uploadCard.style.opacity = '1';
+      uploadCard.style.pointerEvents = 'auto';
+      hideError();
+    }
+  </script>
+</body>
+
+</html>

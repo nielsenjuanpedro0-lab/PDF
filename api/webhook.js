@@ -20,6 +20,12 @@ export default async function handler(req, res) {
         body,
     });
 
-    const data = await response.json();
-    res.status(200).json(data);
+    const text = await response.text();
+
+    try {
+        const data = JSON.parse(text);
+        res.status(200).json(data);
+    } catch {
+        res.status(200).json({ raw: text, error: 'respuesta no era JSON' });
+    }
 }
